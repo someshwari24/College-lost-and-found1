@@ -1,0 +1,5 @@
+function appNav(active=''){
+ const user=localStorage.getItem('user');
+ return `<nav><a class="brand" href="${user?'student-dashboard.html':'index.html'}"><span class="brand-mark">LF</span>Campus Lost & Found</a>${user?`<a class="${active==='dashboard'?'active':''}" href="student-dashboard.html">Dashboard</a><a class="${active==='browse'?'active':''}" href="browse-items.html">Browse</a><a class="${active==='posts'?'active':''}" href="my-posts.html">My Posts</a><a class="${active==='claims'?'active':''}" href="claims.html">Claims</a><a class="${active==='notifications'?'active':''}" href="notifications.html">Notifications <span id="notification-count" class="count-badge"></span></a><a href="#" onclick="logout()">Logout</a>`:`<a class="${active==='browse'?'active':''}" href="browse-items.html">Browse</a><a href="login.html">Login</a><a class="btn" href="register.html">Register</a>`}</nav>`;
+}
+function mountNav(active=''){const h=document.querySelector('header');if(h)h.innerHTML=appNav(active)}

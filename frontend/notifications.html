@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications | College Lost & Found</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body onload="requireLogin(); loadNotifications(); loadNotificationCount();">
+<header><nav>
+  <b>Notifications</b>
+  <a href="student-dashboard.html">Dashboard</a>
+  <a href="my-posts.html">My Posts</a>
+  <a href="claims.html">Claims</a>
+  <a href="notifications.html">Notifications <span id="notification-count" class="count-badge"></span></a>
+  <a href="#" onclick="logout()">Logout</a>
+</nav></header>
+<main class="container">
+  <div class="page-heading"><div><h1>Notifications</h1><p class="muted">Match, claim and collection updates appear here.</p></div><button onclick="markAllNotificationsRead()">Mark all as read</button></div>
+  <div id="notifications"></div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/notifications.js"></script>
+</body>
+</html>
