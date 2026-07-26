@@ -1,638 +1,1269 @@
 <!doctype html>
+
 <html lang="en">
 
+ 
+
 <head>
+
     <meta charset="UTF-8">
 
+ 
+
     <meta
+
         name="viewport"
+
         content="width=device-width, initial-scale=1.0"
+
     >
+
+ 
 
     <title>Possible Matches | College Lost & Found</title>
 
+ 
+
     <link
+
         rel="stylesheet"
+
         href="css/style.css"
+
     >
 
+ 
+
     <style>
+
         .page-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: flex-start;
+
             gap: 20px;
+
             margin-bottom: 25px;
+
         }
+
+ 
 
         .page-header h1 {
+
             margin-bottom: 8px;
+
         }
+
+ 
 
         .matches-grid {
+
             display: grid;
+
             gap: 24px;
+
         }
+
+ 
 
         .match-card {
+
             background: white;
+
             border: 1px solid #e1e6f0;
+
             border-radius: 22px;
+
             padding: 24px;
+
             box-shadow: 0 12px 35px rgba(31, 45, 75, 0.08);
+
         }
+
+ 
 
         .match-card-header {
+
             display: flex;
+
             align-items: flex-start;
+
             justify-content: space-between;
+
             gap: 20px;
+
             margin-bottom: 20px;
+
         }
+
+ 
 
         .match-title-area {
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
+
             flex-wrap: wrap;
+
         }
+
+ 
 
         .match-title-area h2 {
+
             margin: 0;
+
             font-size: 25px;
+
             color: #14213d;
+
         }
+
+ 
 
         .item-type-badge,
+
         .match-level-badge {
+
             display: inline-flex;
+
             align-items: center;
+
             justify-content: center;
+
             padding: 7px 12px;
+
             border-radius: 999px;
+
             font-size: 12px;
+
             font-weight: 800;
+
             letter-spacing: 0.4px;
+
         }
+
+ 
 
         .item-type-lost {
+
             background: #fff0f0;
+
             color: #c62828;
+
         }
+
+ 
 
         .item-type-found {
+
             background: #eaf8ef;
+
             color: #08783e;
+
         }
+
+ 
 
         .match-level-strong {
+
             background: #eae8ff;
+
             color: #4434ce;
+
         }
+
+ 
 
         .match-level-possible {
+
             background: #fff5db;
+
             color: #9b6700;
+
         }
+
+ 
 
         .score-circle {
+
             min-width: 92px;
+
             height: 92px;
+
             border-radius: 50%;
+
             display: flex;
+
             flex-direction: column;
+
             justify-content: center;
+
             align-items: center;
+
             background: linear-gradient(135deg, #5146e5, #7068ff);
+
             color: white;
+
             box-shadow: 0 10px 25px rgba(81, 70, 229, 0.25);
+
         }
+
+ 
 
         .score-circle strong {
+
             font-size: 23px;
+
         }
+
+ 
 
         .score-circle span {
+
             font-size: 11px;
+
             margin-top: 2px;
+
         }
+
+ 
 
         .match-content {
+
             display: grid;
+
             grid-template-columns: 250px 1fr;
+
             gap: 25px;
+
         }
+
+ 
 
         .match-image-wrapper {
+
             width: 100%;
+
             min-height: 230px;
+
             border-radius: 18px;
+
             overflow: hidden;
+
             background: #f1f4f9;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
         }
+
+ 
 
         .match-image {
+
             width: 100%;
+
             height: 230px;
+
             object-fit: cover;
+
         }
+
+ 
 
         .no-image {
+
             color: #667085;
+
             text-align: center;
+
             padding: 20px;
+
         }
+
+ 
 
         .match-details {
+
             display: grid;
+
             grid-template-columns: repeat(2, minmax(0, 1fr));
+
             gap: 15px;
+
         }
+
+ 
 
         .detail-box {
+
             padding: 14px 16px;
+
             border: 1px solid #e7eaf1;
+
             background: #f9fafc;
+
             border-radius: 14px;
+
         }
+
+ 
 
         .detail-box.full-width {
+
             grid-column: 1 / -1;
+
         }
+
+ 
 
         .detail-label {
+
             display: block;
+
             margin-bottom: 5px;
+
             color: #687086;
+
             font-size: 13px;
+
             font-weight: 700;
+
         }
+
+ 
 
         .detail-value {
+
             color: #172033;
+
             font-size: 15px;
+
             overflow-wrap: anywhere;
+
         }
+
+ 
 
         .match-recommendation {
+
             margin-top: 20px;
+
             padding: 16px;
+
             border-radius: 14px;
+
             background: #eafaf0;
+
             border: 1px solid #cbeed8;
+
             color: #08783e;
+
             font-weight: 700;
+
         }
+
+ 
 
         .security-box {
+
             margin-top: 20px;
+
             padding: 16px;
+
             background: #fff8e6;
+
             border: 1px solid #f4dfa5;
+
             border-radius: 14px;
+
             color: #71530a;
+
         }
+
+ 
 
         .security-box strong {
+
             display: block;
+
             margin-bottom: 4px;
+
         }
+
+ 
 
         .posted-by-box {
+
             margin-top: 20px;
+
             padding: 16px;
+
             border-radius: 14px;
+
             background: #f4f3ff;
+
             border: 1px solid #dedbff;
+
         }
+
+ 
 
         .hidden-contact {
+
             color: #6d6a85;
+
             font-size: 14px;
+
             margin-top: 7px;
+
         }
+
+ 
 
         .match-actions {
+
             margin-top: 22px;
+
             padding-top: 20px;
+
             border-top: 1px solid #e7eaf1;
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
+
             flex-wrap: wrap;
+
         }
+
+ 
 
         .claim-button {
+
             border: none;
+
             background: linear-gradient(135deg, #5146e5, #665cf4);
+
             color: white;
+
             padding: 13px 24px;
+
             border-radius: 12px;
+
             font-weight: 800;
+
             cursor: pointer;
+
             font-size: 15px;
+
         }
+
+ 
 
         .claim-button:hover {
+
             transform: translateY(-1px);
+
             box-shadow: 0 9px 20px rgba(81, 70, 229, 0.25);
+
         }
+
+ 
 
         .claim-button:disabled {
+
             cursor: not-allowed;
+
             opacity: 0.65;
+
             transform: none;
+
             box-shadow: none;
+
         }
+
+ 
 
         .claim-status {
+
             padding: 10px 14px;
+
             border-radius: 10px;
+
             font-weight: 700;
+
             font-size: 14px;
+
         }
+
+ 
 
         .claim-status-pending {
+
             color: #8a5b00;
+
             background: #fff2ce;
+
         }
+
+ 
 
         .claim-status-approved {
+
             color: #08783e;
+
             background: #dff7e8;
+
         }
+
+ 
 
         .claim-status-rejected {
+
             color: #b42318;
+
             background: #fee4e2;
+
         }
+
+ 
 
         .empty-state {
+
             padding: 45px 25px;
+
             text-align: center;
+
             background: white;
+
             border-radius: 20px;
+
             border: 1px solid #e4e8f0;
+
         }
+
+ 
 
         .modal-overlay {
+
             position: fixed;
+
             inset: 0;
+
             z-index: 9999;
+
             background: rgba(12, 19, 35, 0.68);
+
             display: none;
+
             align-items: center;
+
             justify-content: center;
+
             padding: 20px;
+
         }
+
+ 
 
         .modal-overlay.show {
+
             display: flex;
+
         }
+
+ 
 
         .claim-modal {
+
             width: min(560px, 100%);
+
             max-height: 90vh;
+
             overflow-y: auto;
+
             background: white;
+
             border-radius: 22px;
+
             padding: 28px;
+
             box-shadow: 0 25px 80px rgba(0, 0, 0, 0.28);
+
         }
+
+ 
 
         .modal-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: flex-start;
+
             gap: 15px;
+
             margin-bottom: 20px;
+
         }
+
+ 
 
         .modal-header h2 {
+
             margin: 0 0 6px;
+
         }
+
+ 
 
         .modal-close {
+
             width: 38px;
+
             height: 38px;
+
             border: none;
+
             border-radius: 50%;
+
             background: #f0f2f7;
+
             cursor: pointer;
+
             font-size: 21px;
+
         }
+
+ 
 
         .claim-form-group {
+
             margin-bottom: 17px;
+
         }
+
+ 
 
         .claim-form-group label {
+
             display: block;
+
             margin-bottom: 7px;
+
             font-weight: 700;
+
             color: #25304a;
+
         }
+
+ 
 
         .claim-form-group input,
-        .claim-form-group textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #ccd3df;
-            border-radius: 11px;
-            font: inherit;
-        }
 
         .claim-form-group textarea {
-            min-height: 100px;
-            resize: vertical;
+
+            width: 100%;
+
+            padding: 12px 14px;
+
+            border: 1px solid #ccd3df;
+
+            border-radius: 11px;
+
+            font: inherit;
+
         }
+
+ 
+
+        .claim-form-group textarea {
+
+            min-height: 100px;
+
+            resize: vertical;
+
+        }
+
+ 
 
         .claim-form-group input:focus,
+
         .claim-form-group textarea:focus {
+
             outline: none;
+
             border-color: #5146e5;
+
             box-shadow: 0 0 0 3px rgba(81, 70, 229, 0.12);
+
         }
+
+ 
 
         .claim-warning {
+
             padding: 13px;
+
             background: #fff6dc;
+
             border: 1px solid #f3d888;
+
             border-radius: 11px;
+
             font-size: 13px;
+
             color: #72530a;
+
             margin-bottom: 18px;
+
         }
+
+ 
 
         .modal-actions {
+
             display: flex;
+
             justify-content: flex-end;
+
             gap: 12px;
+
         }
+
+ 
 
         .secondary-button {
+
             border: 1px solid #ccd3df;
+
             background: white;
+
             color: #26324b;
+
             padding: 12px 19px;
+
             border-radius: 11px;
+
             cursor: pointer;
+
             font-weight: 700;
+
         }
+
+ 
 
         .submit-claim-button {
+
             border: none;
+
             background: #5146e5;
+
             color: white;
+
             padding: 12px 19px;
+
             border-radius: 11px;
+
             cursor: pointer;
+
             font-weight: 800;
+
         }
+
+ 
 
         @media (max-width: 800px) {
+
             .match-content {
+
                 grid-template-columns: 1fr;
+
             }
+
+ 
 
             .match-image-wrapper,
+
             .match-image {
+
                 height: 280px;
+
             }
+
+ 
 
             .match-card-header {
+
                 flex-direction: column;
+
             }
+
+ 
 
             .score-circle {
+
                 width: 85px;
+
                 min-width: 85px;
+
                 height: 85px;
+
             }
+
         }
+
+ 
 
         @media (max-width: 560px) {
+
             .match-details {
+
                 grid-template-columns: 1fr;
+
             }
+
+ 
 
             .detail-box.full-width {
+
                 grid-column: auto;
+
             }
+
+ 
 
             .page-header {
+
                 flex-direction: column;
+
             }
+
+ 
 
             .match-card {
+
                 padding: 17px;
+
             }
+
+ 
 
             .claim-modal {
+
                 padding: 20px;
+
             }
+
+ 
 
             .modal-actions {
+
                 flex-direction: column-reverse;
+
             }
 
+ 
+
             .secondary-button,
+
             .submit-claim-button {
+
                 width: 100%;
+
             }
+
         }
+
     </style>
+
 </head>
+
+ 
 
 <body onload="initializeMatchesPage()">
 
+ 
+
 <header>
+
     <nav>
+
         <a href="student-dashboard.html">Dashboard</a>
+
+ 
 
         <a href="my-posts.html">My Posts</a>
 
+ 
+
         <b>Possible Matches</b>
+
+ 
 
         <a href="claims.html">Claims</a>
 
+ 
+
         <a href="notifications.html">
+
             Notifications
-            <span id="notificationCount"></span>
+
+            <span id="notification-count"></span>
+
         </a>
 
+ 
+
         <a href="#" onclick="logout(); return false;">
+
             Logout
+
         </a>
+
     </nav>
+
 </header>
+
+ 
 
 <main class="container">
 
+ 
+
     <section class="card page-header">
 
+ 
+
         <div>
+
             <h1>Possible Matches</h1>
 
+ 
+
             <p class="muted">
+
                 Items scoring 50% or more are displayed.
+
                 Scores of 70% or more are recommended.
+
             </p>
+
         </div>
+
+ 
 
     </section>
 
+ 
+
     <div id="message"></div>
 
+ 
+
     <div
+
         id="matches"
+
         class="matches-grid"
+
     ></div>
+
+ 
 
 </main>
 
+ 
+
 <!-- Secure claim modal -->
+
 <div
+
     id="claimModal"
+
     class="modal-overlay"
+
     onclick="closeClaimModalFromOverlay(event)"
+
 >
+
+ 
 
     <div class="claim-modal">
 
+ 
+
         <div class="modal-header">
 
+ 
+
             <div>
+
                 <h2>Submit Claim</h2>
 
+ 
+
                 <p class="muted">
+
                     Provide details that only the genuine owner would know.
+
                 </p>
+
             </div>
+
+ 
 
             <button
+
                 type="button"
+
                 class="modal-close"
+
                 onclick="closeClaimModal()"
+
                 aria-label="Close"
+
             >
+
                 &times;
+
             </button>
 
+ 
+
         </div>
+
+ 
 
         <div class="claim-warning">
+
             Do not enter passwords, bank details, OTPs or other highly
+
             sensitive information. Your answer will be shown only to the
+
             finder while reviewing the claim.
+
         </div>
 
-        <form
-            id="claimForm"
-            onsubmit="submitClaim(event)"
-        >
+ 
+
+        <form id="claimForm">
+
+ 
 
             <input
+
                 type="hidden"
+
                 id="claimLostItemId"
+
             >
 
+ 
+
             <input
+
                 type="hidden"
+
                 id="claimFoundItemId"
+
             >
+
+ 
 
             <div class="claim-form-group">
+
+ 
 
                 <label for="ownershipProof">
+
                     Unique identification details
+
                 </label>
 
+ 
+
                 <textarea
+
                     id="ownershipProof"
+
                     maxlength="500"
+
                     placeholder="Example: The ID card has a small blue mark near the bottom-right corner."
+
                     required
+
                 ></textarea>
+
+ 
 
             </div>
 
+ 
+
             <div class="claim-form-group">
+
+ 
 
                 <label for="additionalDetails">
+
                     Additional ownership details
+
                 </label>
 
+ 
+
                 <textarea
+
                     id="additionalDetails"
+
                     maxlength="500"
+
                     placeholder="Mention contents, scratches, cover details, serial fragments or another private detail."
+
                     required
+
                 ></textarea>
 
+ 
+
             </div>
+
+ 
 
             <div class="claim-form-group">
 
+ 
+
                 <label for="collectionMessage">
+
                     Message to finder
+
                 </label>
 
+ 
+
                 <textarea
+
                     id="collectionMessage"
+
                     maxlength="300"
+
                     placeholder="Explain briefly why you believe this item belongs to you."
+
                     required
+
                 ></textarea>
 
+ 
+
             </div>
+
+ 
 
             <div class="modal-actions">
 
-                <button
-                    type="button"
-                    class="secondary-button"
-                    onclick="closeClaimModal()"
-                >
-                    Cancel
-                </button>
+ 
 
                 <button
-                    type="submit"
-                    id="submitClaimButton"
-                    class="submit-claim-button"
+
+                    type="button"
+
+                    class="secondary-button"
+
+                    onclick="closeClaimModal()"
+
                 >
-                    Submit Claim
+
+                    Cancel
+
                 </button>
+
+ 
+
+                <button
+
+                    type="submit"
+
+                    id="submitClaimButton"
+
+                    class="submit-claim-button"
+
+                >
+
+                    Submit Claim
+
+                </button>
+
+ 
 
             </div>
 
+ 
+
         </form>
+
+ 
 
     </div>
 
+ 
+
 </div>
 
+ 
+
 <script src="js/config.js"></script>
+
 <script src="js/auth.js"></script>
+
 <script src="js/claims.js"></script>
+
 <script src="js/matches.js"></script>
+
 <script src="js/notifications.js"></script>
 
+ 
+
 <script>
+
     async function initializeMatchesPage() {
+
         requireLogin();
+
+ 
 
         await loadMatches();
 
+ 
+
         if (typeof loadNotificationCount === "function") {
+
             loadNotificationCount();
+
         }
+
     }
+
 </script>
 
+ 
+
 </body>
+
 </html>

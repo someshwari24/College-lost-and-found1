@@ -324,8 +324,10 @@ async function loadClaims() {
     }
 
     box.innerHTML = `
-        <div class="card">
-            Loading claims...
+        <div class="card loading-card">
+            <div class="loading-spinner"></div>
+            <strong>Loading claim requests</strong>
+            <span>Please wait while your claims are retrieved.</span>
         </div>
     `;
 
@@ -1071,10 +1073,3 @@ function highlightSelectedClaim() {
         "selectedClaimId"
     );
 }
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-        loadClaims();
-    }
-);
