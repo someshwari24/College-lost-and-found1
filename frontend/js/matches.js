@@ -83,11 +83,11 @@ async function loadMatches() {
     const matchesContainer =
         document.getElementById("matches");
 
+    const user = getLoggedInUser();
+
     if (!matchesContainer) {
         return;
     }
-
-    const user = getLoggedInUser();
 
     if (!user) {
         window.location.href = "login.html";
@@ -99,9 +99,28 @@ async function loadMatches() {
         user.id ||
         user._id;
 
+    const urlParams =
+        new URLSearchParams(window.location.search);
+
+    const itemId =
+        urlParams.get("itemId");
+
     if (!userId) {
         localStorage.removeItem("user");
         window.location.href = "login.html";
+        return;
+    }
+
+    if (!itemId) {
+        matchesContainer.innerHTML = `
+            <div class="empty-state">
+                <h3>Unable to load matches</h3>
+                <p>Item ID is missing from the page URL.</p>
+                <a class="btn" href="my-posts.html">
+                    Return to My Posts
+                </a>
+            </div>
+        `;
         return;
     }
 
@@ -113,7 +132,9 @@ async function loadMatches() {
 
     try {
         const response = await fetch(
-            `${API_BASE_URL}/matches?userId=${encodeURIComponent(userId)}`
+            `${API_BASE_URL}/matches` +
+            `?itemId=${encodeURIComponent(itemId)}` +
+            `&userId=${encodeURIComponent(userId)}`
         );
 
         const text = await response.text();
@@ -121,10 +142,12 @@ async function loadMatches() {
         let result = {};
 
         try {
-            result = text ? JSON.parse(text) : {};
+            result = text
+                ? JSON.parse(text)
+                : {};
         } catch {
             throw new Error(
-                `Invalid backend response: ${text}`
+                text || "Invalid response from backend"
             );
         }
 
@@ -142,7 +165,10 @@ async function loadMatches() {
         renderMatches(matches, userId);
 
     } catch (error) {
-        console.error("Load matches error:", error);
+        console.error(
+            "Load matches error:",
+            error
+        );
 
         matchesContainer.innerHTML = `
             <div class="empty-state">
@@ -152,7 +178,6 @@ async function loadMatches() {
         `;
     }
 }
-
 function renderMatches(matches, currentUserId) {
     const matchesContainer =
         document.getElementById("matches");

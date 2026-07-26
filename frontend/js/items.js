@@ -87,6 +87,29 @@ async function loadItems(my = false) {
     });
 }
 
+function getItemImageUrl(imagePath) {
+    if (!imagePath) {
+        return "";
+    }
+
+    if (
+        imagePath.startsWith("http://") ||
+        imagePath.startsWith("https://")
+    ) {
+        return imagePath;
+    }
+
+    const backendBaseUrl =
+        API_BASE_URL.replace(/\/api\/?$/, "");
+
+    const normalizedPath =
+        imagePath.startsWith("/")
+            ? imagePath
+            : `/${imagePath}`;
+
+    return `${backendBaseUrl}${normalizedPath}`;
+}
+
 async function resolveItem(id) {
     const user = currentUser();
     const response = await fetch(`${API_BASE_URL}/items?id=${encodeURIComponent(id)}&userId=${encodeURIComponent(user.userId)}`, { method: 'PUT' });
