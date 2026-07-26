@@ -1,1 +1,192 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Report Found Item</title><link rel="stylesheet" href="css/style.css"></head><body onload="requireLogin();loadNotificationCount()"><header></header><main class="container narrow"><div class="page-heading"><div><div class="eyebrow">📦 New report</div><h1 class="page-title">Report Found Item</h1><p class="muted">Add clear details to improve matching accuracy.</p></div></div><section class="card form-card"><div id="message"></div><form class="form-grid" enctype="multipart/form-data" onsubmit="submitItem(event,'FOUND')"><label>Item name<input name="itemName" placeholder="e.g. Black wallet" required></label><label>Category<select name="category" required><option value="">Select category</option><option>Electronics</option><option>Wallet</option><option>ID Card</option><option>Keys</option><option>Bag</option><option>Books</option><option>Water Bottle</option><option>Other</option></select></label><label>Color<input name="color" placeholder="e.g. Black"></label><label>Brand<input name="brand" placeholder="e.g. Samsung"></label><label>Location<select name="location"><option>Library</option><option>Canteen</option><option>Block A</option><option>Block B</option><option>Parking</option><option>Ground</option><option>Lab</option><option>Other</option></select></label><label>Date<input type="date" name="eventDate"></label><label class="full">Description<textarea name="description" rows="5" placeholder="Mention identifying marks, contents or unique details"></textarea></label><label class="full">Item image<input type="file" name="image" accept="image/*"><small class="muted">Choose an image from your device. Maximum size: 10 MB.</small></label><div class="full"><button>Submit FOUND Report</button></div></form></section></main><script src="js/config.js"></script><script src="js/auth.js"></script><script src="js/items.js"></script><script src="js/notifications.js"></script><script src="js/ui.js"></script><script>mountNav()</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Report Found Item</title>
+
+    <link rel="stylesheet"
+          href="css/style.css">
+</head>
+
+<body onload="requireLogin()">
+
+<header id="navbar"></header>
+
+<main class="container narrow">
+
+    <div class="page-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                📦 New Report
+            </div>
+
+            <h1 class="page-title">
+                Report Found Item
+            </h1>
+
+            <p class="muted">
+                Add clear details to improve matching accuracy.
+            </p>
+
+        </div>
+
+    </div>
+
+    <section class="card form-card">
+
+        <div id="message"></div>
+
+        <form class="form-grid"
+              enctype="multipart/form-data"
+              onsubmit="submitItem(event, 'FOUND')">
+
+            <label>
+                Item Name
+
+                <input
+                    type="text"
+                    name="itemName"
+                    placeholder="e.g. Black Wallet"
+                    required>
+            </label>
+
+            <label>
+                Category
+
+                <select name="category" required>
+
+                    <option value="">
+                        Select Category
+                    </option>
+
+                    <option>Electronics</option>
+                    <option>Wallet</option>
+                    <option>ID Card</option>
+                    <option>Keys</option>
+                    <option>Bag</option>
+                    <option>Books</option>
+                    <option>Water Bottle</option>
+                    <option>Mobile Phone</option>
+                    <option>Laptop</option>
+                    <option>Watch</option>
+                    <option>Other</option>
+
+                </select>
+            </label>
+
+            <label>
+                Color
+
+                <input
+                    type="text"
+                    name="color"
+                    placeholder="e.g. Black">
+            </label>
+
+            <label>
+                Brand
+
+                <input
+                    type="text"
+                    name="brand"
+                    placeholder="e.g. Samsung">
+            </label>
+
+            <label>
+                Found Location
+
+                <select name="location">
+
+                    <option>Library</option>
+                    <option>Canteen</option>
+                    <option>Block A</option>
+                    <option>Block B</option>
+                    <option>Block C</option>
+                    <option>Parking</option>
+                    <option>Ground</option>
+                    <option>Lab</option>
+                    <option>Auditorium</option>
+                    <option>Other</option>
+
+                </select>
+
+            </label>
+
+            <label>
+                Date Found
+
+                <input
+                    type="date"
+                    name="eventDate">
+            </label>
+
+            <label class="full">
+
+                Description
+
+                <textarea
+                    name="description"
+                    rows="5"
+                    placeholder="Mention identifying marks, contents, scratches or any unique details."></textarea>
+
+            </label>
+
+            <label class="full">
+
+                Upload Item Image
+
+                <input
+                    type="file"
+                    name="image"
+                    accept="image/*">
+
+                <small class="muted">
+                    JPG, JPEG or PNG.
+                    Maximum size: 10 MB.
+                </small>
+
+            </label>
+
+            <div class="full">
+
+                <button type="submit">
+                    Submit Found Report
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/items.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/ui.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    if (typeof mountNav === "function") {
+        mountNav("report-found");
+    }
+
+    if (typeof loadNotificationCount === "function") {
+        loadNotificationCount();
+    }
+
+});
+</script>
+
+</body>
+</html>

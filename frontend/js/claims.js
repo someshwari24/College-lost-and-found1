@@ -4,6 +4,7 @@ const claimUser = () => {
             localStorage.getItem("user") || "null"
         );
     } catch (error) {
+        localStorage.removeItem("user");
         return null;
     }
 };
@@ -28,7 +29,12 @@ function getClaimUserId() {
         return "";
     }
 
-    return user.userId || user.id || user._id || "";
+    return (
+        user.userId ||
+        user.id ||
+        user._id ||
+        ""
+    );
 }
 
 function getClaimId(claim) {
@@ -40,11 +46,39 @@ function getClaimId(claim) {
         return claim._id;
     }
 
-    return claim._id?.$oid || claim.id || "";
+    return (
+        claim._id?.$oid ||
+        claim.id ||
+        ""
+    );
 }
 
-function showClaimMessage(message, type = "success") {
-    const messageBox = document.getElementById("message");
+async function parseClaimResponse(response) {
+    const text = await response.text();
+
+    let data = {};
+
+    if (!text) {
+        return data;
+    }
+
+    try {
+        data = JSON.parse(text);
+    } catch {
+        throw new Error(
+            `Invalid response from backend: ${text}`
+        );
+    }
+
+    return data;
+}
+
+function showClaimMessage(
+    message,
+    type = "success"
+) {
+    const messageBox =
+        document.getElementById("message");
 
     if (!messageBox) {
         alert(message);
@@ -62,12 +96,6 @@ function showClaimMessage(message, type = "success") {
     }, 5000);
 }
 
-/*
- * This function is kept for compatibility with older match pages.
- *
- * The new matches page should preferably use the secure modal instead
- * of calling this function directly.
- */
 async function createClaim(
     lostItemId,
     foundItemId,
@@ -78,7 +106,16 @@ async function createClaim(
     const userId = getClaimUserId();
 
     if (!userId) {
+        localStorage.removeItem("user");
         window.location.href = "login.html";
+        return;
+    }
+
+    if (!lostItemId || !foundItemId) {
+        showClaimMessage(
+            "Lost item ID or found item ID is missing.",
+            "error"
+        );
         return;
     }
 
@@ -91,7 +128,8 @@ async function createClaim(
             return;
         }
 
-        ownershipProof = ownershipProof.trim();
+        ownershipProof =
+            ownershipProof.trim();
     }
 
     if (ownershipProof.length < 10) {
@@ -108,7 +146,8 @@ async function createClaim(
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type":
+                        "application/json"
                 },
 
                 body: JSON.stringify({
@@ -118,14 +157,14 @@ async function createClaim(
                     ownershipProof,
                     additionalDetails,
                     message,
-
-                    // Retained for compatibility with the old backend.
-                    verificationAnswer: ownershipProof
+                    verificationAnswer:
+                        ownershipProof
                 })
             }
         );
 
-        const result = await response.json();
+        const result =
+            await parseClaimResponse(response);
 
         if (!response.ok) {
             throw new Error(
@@ -139,10 +178,14 @@ async function createClaim(
             "Claim submitted successfully"
         );
 
-        window.location.href = "claims.html";
+        window.location.href =
+            "claims.html";
 
     } catch (error) {
-        console.error(error);
+        console.error(
+            "Create claim error:",
+            error
+        );
 
         alert(
             error.message ||
@@ -155,9 +198,21 @@ async function claimAction(id, action) {
     const userId = getClaimUserId();
 
     if (!userId) {
+        localStorage.removeItem("user");
         window.location.href = "login.html";
         return;
     }
+
+    if (!id || !action) {
+        showClaimMessage(
+            "Claim information is missing.",
+            "error"
+        );
+        return;
+    }
+
+    const normalizedAction =
+        String(action).toUpperCase();
 
     const actionMessages = {
         APPROVE:
@@ -174,7 +229,7 @@ async function claimAction(id, action) {
     };
 
     const confirmationMessage =
-        actionMessages[action];
+        actionMessages[normalizedAction];
 
     if (
         confirmationMessage &&
@@ -184,28 +239,33 @@ async function claimAction(id, action) {
     }
 
     const button = document.querySelector(
-        `[data-claim-id="${CSS.escape(id)}"][data-action="${CSS.escape(action)}"]`
+        `[data-claim-id="${CSS.escape(id)}"]` +
+        `[data-action="${CSS.escape(normalizedAction)}"]`
     );
 
     if (button) {
         button.disabled = true;
+
         button.dataset.originalText =
             button.textContent;
-        button.textContent = "Processing...";
+
+        button.textContent =
+            "Processing...";
     }
 
     try {
         const response = await fetch(
             `${API_BASE_URL}/claims` +
             `?id=${encodeURIComponent(id)}` +
-            `&action=${encodeURIComponent(action)}` +
+            `&action=${encodeURIComponent(normalizedAction)}` +
             `&userId=${encodeURIComponent(userId)}`,
             {
                 method: "PUT"
             }
         );
 
-        const result = await response.json();
+        const result =
+            await parseClaimResponse(response);
 
         if (!response.ok) {
             throw new Error(
@@ -222,7 +282,10 @@ async function claimAction(id, action) {
         await loadClaims();
 
     } catch (error) {
-        console.error(error);
+        console.error(
+            "Claim action error:",
+            error
+        );
 
         showClaimMessage(
             error.message ||
@@ -231,23 +294,31 @@ async function claimAction(id, action) {
         );
 
     } finally {
-        if (button && document.body.contains(button)) {
+        if (
+            button &&
+            document.body.contains(button)
+        ) {
             button.disabled = false;
+
             button.textContent =
-                button.dataset.originalText || action;
+                button.dataset.originalText ||
+                normalizedAction;
         }
     }
 }
 
 async function loadClaims() {
     const userId = getClaimUserId();
-    const box = document.getElementById("claims");
+
+    const box =
+        document.getElementById("claims");
 
     if (!box) {
         return;
     }
 
     if (!userId) {
+        localStorage.removeItem("user");
         window.location.href = "login.html";
         return;
     }
@@ -264,22 +335,31 @@ async function loadClaims() {
             `?userId=${encodeURIComponent(userId)}`
         );
 
-        const data = await response.json();
+        const result =
+            await parseClaimResponse(response);
 
         if (!response.ok) {
             throw new Error(
-                data.message ||
+                result.message ||
                 "Unable to load claims"
             );
         }
 
-        if (!Array.isArray(data) || data.length === 0) {
+        const claims =
+            Array.isArray(result)
+                ? result
+                : result.claims || [];
+
+        if (claims.length === 0) {
             box.innerHTML = `
                 <div class="card empty-state">
-                    <h3>No claim requests yet</h3>
+                    <h3>
+                        No claim requests yet
+                    </h3>
 
                     <p class="muted">
-                        Submitted and received claims will appear here.
+                        Submitted and received claims
+                        will appear here.
                     </p>
                 </div>
             `;
@@ -287,74 +367,91 @@ async function loadClaims() {
             return;
         }
 
-        box.innerHTML = data
-            .map(claim => createClaimCard(claim))
+        box.innerHTML = claims
+            .map(claim =>
+                createClaimCard(claim)
+            )
             .join("");
 
         highlightSelectedClaim();
 
     } catch (error) {
-        console.error(error);
+        console.error(
+            "Load claims error:",
+            error
+        );
 
         box.innerHTML = `
             <div class="message error">
-                ${ce(error.message)}
+                ${ce(
+                    error.message ||
+                    "Unable to load claims"
+                )}
             </div>
         `;
     }
 }
 
 function createClaimCard(claim) {
-    const claimId = getClaimId(claim);
+    const claimId =
+        getClaimId(claim);
 
-    const viewerRole = String(
-        claim.viewerRole || ""
-    ).toUpperCase();
+    const viewerRole =
+        String(
+            claim.viewerRole || ""
+        ).toUpperCase();
 
-    const status = String(
-        claim.status || ""
-    ).toUpperCase();
+    const status =
+        String(
+            claim.status || ""
+        ).toUpperCase();
 
-    const isFinder =
-        viewerRole === "FINDER";
+    const actions =
+        createClaimActions(
+            claimId,
+            viewerRole,
+            status,
+            claim
+        );
 
-    const isOwner =
-        viewerRole === "OWNER";
+    const contact =
+        createContactSection(
+            claim,
+            viewerRole,
+            status
+        );
 
-    const actions = createClaimActions(
-        claimId,
-        viewerRole,
-        status,
-        claim
-    );
+    const verification =
+        createVerificationSection(
+            claim,
+            viewerRole,
+            status
+        );
 
-    const contact = createContactSection(
-        claim,
-        viewerRole,
-        status
-    );
+    const lostImage =
+        getClaimImageUrl(
+            claim.lostItemImage
+        );
 
-    const verification = createVerificationSection(
-        claim,
-        viewerRole,
-        status
-    );
-
-    const lostImage = getClaimImageUrl(
-        claim.lostItemImage
-    );
-
-    const foundImage = getClaimImageUrl(
-        claim.foundItemImage
-    );
+    const foundImage =
+        getClaimImageUrl(
+            claim.foundItemImage
+        );
 
     const statusClass =
         getClaimStatusClass(status);
 
     const roleLabel =
-        isFinder
+        viewerRole === "FINDER"
             ? "You are the finder"
-            : "You are the owner";
+            : viewerRole === "OWNER"
+                ? "You are the owner"
+                : "Claim participant";
+
+    const shortClaimId =
+        claimId
+            ? claimId.slice(-6)
+            : "Unknown";
 
     return `
         <article
@@ -368,13 +465,17 @@ function createClaimCard(claim) {
                         ${ce(roleLabel)}
                     </span>
 
-                    <span class="badge ${ce(statusClass)}">
-                        ${ce(formatClaimStatus(status))}
+                    <span
+                        class="badge ${ce(statusClass)}"
+                    >
+                        ${ce(
+                            formatClaimStatus(status)
+                        )}
                     </span>
                 </div>
 
                 <span class="claim-id-text">
-                    Claim ${ce(claimId.slice(-6))}
+                    Claim ${ce(shortClaimId)}
                 </span>
 
             </div>
@@ -392,16 +493,28 @@ function createClaimCard(claim) {
                             ? `
                                 <img
                                     src="${ce(lostImage)}"
-                                    alt="${ce(claim.lostItemName || "Lost item")}"
+                                    alt="${ce(
+                                        claim.lostItemName ||
+                                        "Lost item"
+                                    )}"
                                     class="claim-item-image"
-                                    onerror="this.style.display='none'"
+                                    onerror="
+                                        this.style.display='none'
+                                    "
                                 >
                             `
-                            : ""
+                            : `
+                                <div class="no-image">
+                                    No image
+                                </div>
+                            `
                     }
 
                     <h3>
-                        ${ce(claim.lostItemName || "Deleted item")}
+                        ${ce(
+                            claim.lostItemName ||
+                            "Deleted item"
+                        )}
                     </h3>
 
                 </section>
@@ -421,16 +534,28 @@ function createClaimCard(claim) {
                             ? `
                                 <img
                                     src="${ce(foundImage)}"
-                                    alt="${ce(claim.foundItemName || "Found item")}"
+                                    alt="${ce(
+                                        claim.foundItemName ||
+                                        "Found item"
+                                    )}"
                                     class="claim-item-image"
-                                    onerror="this.style.display='none'"
+                                    onerror="
+                                        this.style.display='none'
+                                    "
                                 >
                             `
-                            : ""
+                            : `
+                                <div class="no-image">
+                                    No image
+                                </div>
+                            `
                     }
 
                     <h3>
-                        ${ce(claim.foundItemName || "Deleted item")}
+                        ${ce(
+                            claim.foundItemName ||
+                            "Deleted item"
+                        )}
                     </h3>
 
                 </section>
@@ -442,18 +567,30 @@ function createClaimCard(claim) {
             <div class="claim-progress">
 
                 <div class="progress-row">
-                    <span>Finder returned item</span>
+                    <span>
+                        Finder returned item
+                    </span>
 
                     <strong>
-                        ${claim.finderReturned ? "Yes" : "No"}
+                        ${
+                            claim.finderReturned
+                                ? "Yes"
+                                : "No"
+                        }
                     </strong>
                 </div>
 
                 <div class="progress-row">
-                    <span>Owner received item</span>
+                    <span>
+                        Owner received item
+                    </span>
 
                     <strong>
-                        ${claim.ownerReceived ? "Yes" : "No"}
+                        ${
+                            claim.ownerReceived
+                                ? "Yes"
+                                : "No"
+                        }
                     </strong>
                 </div>
 
@@ -464,7 +601,9 @@ function createClaimCard(claim) {
             ${
                 actions
                     ? `
-                        <div class="actions claim-actions">
+                        <div
+                            class="actions claim-actions"
+                        >
                             ${actions}
                         </div>
                     `
@@ -474,9 +613,12 @@ function createClaimCard(claim) {
             ${
                 status === "REJECTED"
                     ? `
-                        <p class="claim-help-text rejected-text">
-                            This claim was rejected. The matched items may
-                            become available for another valid claim.
+                        <p
+                            class="claim-help-text rejected-text"
+                        >
+                            This claim was rejected.
+                            The matched items may become
+                            available for another valid claim.
                         </p>
                     `
                     : ""
@@ -485,9 +627,11 @@ function createClaimCard(claim) {
             ${
                 status === "RESOLVED"
                     ? `
-                        <p class="claim-help-text resolved-text">
-                            The owner confirmed receiving the item.
-                            This claim is complete.
+                        <p
+                            class="claim-help-text resolved-text"
+                        >
+                            The owner confirmed receiving
+                            the item. This claim is complete.
                         </p>
                     `
                     : ""
@@ -503,6 +647,10 @@ function createClaimActions(
     status,
     claim
 ) {
+    if (!claimId) {
+        return "";
+    }
+
     if (
         viewerRole === "FINDER" &&
         status === "PENDING"
@@ -512,7 +660,12 @@ function createClaimActions(
                 type="button"
                 data-claim-id="${ce(claimId)}"
                 data-action="APPROVE"
-                onclick="claimAction('${ce(claimId)}', 'APPROVE')"
+                onclick="
+                    claimAction(
+                        '${ce(claimId)}',
+                        'APPROVE'
+                    )
+                "
             >
                 Approve Claim
             </button>
@@ -522,7 +675,12 @@ function createClaimActions(
                 class="danger"
                 data-claim-id="${ce(claimId)}"
                 data-action="REJECT"
-                onclick="claimAction('${ce(claimId)}', 'REJECT')"
+                onclick="
+                    claimAction(
+                        '${ce(claimId)}',
+                        'REJECT'
+                    )
+                "
             >
                 Reject Claim
             </button>
@@ -538,7 +696,12 @@ function createClaimActions(
                 type="button"
                 data-claim-id="${ce(claimId)}"
                 data-action="RETURNED"
-                onclick="claimAction('${ce(claimId)}', 'RETURNED')"
+                onclick="
+                    claimAction(
+                        '${ce(claimId)}',
+                        'RETURNED'
+                    )
+                "
             >
                 Mark Item Returned
             </button>
@@ -555,7 +718,12 @@ function createClaimActions(
                 type="button"
                 data-claim-id="${ce(claimId)}"
                 data-action="RECEIVED"
-                onclick="claimAction('${ce(claimId)}', 'RECEIVED')"
+                onclick="
+                    claimAction(
+                        '${ce(claimId)}',
+                        'RECEIVED'
+                    )
+                "
             >
                 Confirm Item Received
             </button>
@@ -570,22 +738,24 @@ function createVerificationSection(
     viewerRole,
     status
 ) {
-    /*
-     * The finder needs the ownership details to evaluate a pending claim.
-     * The owner does not need them displayed again while pending.
-     */
     if (
         viewerRole !== "FINDER" &&
         status === "PENDING"
     ) {
         return `
             <div class="verification-card">
-                <h4>Ownership verification</h4>
+
+                <h4>
+                    Ownership verification
+                </h4>
 
                 <p class="muted">
-                    Your private ownership details were sent to the finder.
-                    They are hidden here while the claim is under review.
+                    Your private ownership details
+                    were sent to the finder.
+                    They are hidden here while the
+                    claim is under review.
                 </p>
+
             </div>
         `;
     }
@@ -596,10 +766,12 @@ function createVerificationSection(
         "";
 
     const additionalDetails =
-        claim.additionalDetails || "";
+        claim.additionalDetails ||
+        "";
 
     const message =
-        claim.message || "";
+        claim.message ||
+        "";
 
     if (
         !ownershipProof &&
@@ -612,17 +784,24 @@ function createVerificationSection(
     return `
         <section class="verification-card">
 
-            <h4>Ownership verification</h4>
+            <h4>
+                Ownership verification
+            </h4>
 
             ${
                 ownershipProof
                     ? `
                         <div class="verification-field">
+
                             <strong>
-                                Unique identification details
+                                Unique identification
+                                details
                             </strong>
 
-                            <p>${ce(ownershipProof)}</p>
+                            <p>
+                                ${ce(ownershipProof)}
+                            </p>
+
                         </div>
                     `
                     : ""
@@ -632,11 +811,16 @@ function createVerificationSection(
                 additionalDetails
                     ? `
                         <div class="verification-field">
+
                             <strong>
-                                Additional ownership details
+                                Additional ownership
+                                details
                             </strong>
 
-                            <p>${ce(additionalDetails)}</p>
+                            <p>
+                                ${ce(additionalDetails)}
+                            </p>
+
                         </div>
                     `
                     : ""
@@ -646,11 +830,15 @@ function createVerificationSection(
                 message
                     ? `
                         <div class="verification-field">
+
                             <strong>
                                 Message
                             </strong>
 
-                            <p>${ce(message)}</p>
+                            <p>
+                                ${ce(message)}
+                            </p>
+
                         </div>
                     `
                     : ""
@@ -667,8 +855,11 @@ function createContactSection(
 ) {
     const contactVisible =
         claim.contactVisible === true ||
-        ["APPROVED", "RETURNED", "RESOLVED"]
-            .includes(status);
+        [
+            "APPROVED",
+            "RETURNED",
+            "RESOLVED"
+        ].includes(status);
 
     if (!contactVisible) {
         return `
@@ -679,8 +870,9 @@ function createContactSection(
                 </strong>
 
                 <p>
-                    Phone number and email will be shown only after
-                    the finder approves the claim.
+                    Phone number and email will be shown
+                    only after the finder approves
+                    the claim.
                 </p>
 
             </div>
@@ -688,13 +880,16 @@ function createContactSection(
     }
 
     const name =
-        claim.otherPartyName || "-";
+        claim.otherPartyName ||
+        "";
 
     const phone =
-        claim.otherPartyPhone || "";
+        claim.otherPartyPhone ||
+        "";
 
     const email =
-        claim.otherPartyEmail || "";
+        claim.otherPartyEmail ||
+        "";
 
     const contactTitle =
         viewerRole === "FINDER"
@@ -705,7 +900,9 @@ function createContactSection(
         return `
             <div class="contact-card">
 
-                <strong>${ce(contactTitle)}</strong>
+                <strong>
+                    ${ce(contactTitle)}
+                </strong>
 
                 <p>
                     Contact information is unavailable.
@@ -718,12 +915,20 @@ function createContactSection(
     return `
         <section class="contact-card">
 
-            <h4>${ce(contactTitle)}</h4>
+            <h4>
+                ${ce(contactTitle)}
+            </h4>
 
-            <p>
-                <b>Name:</b>
-                ${ce(name)}
-            </p>
+            ${
+                name
+                    ? `
+                        <p>
+                            <b>Name:</b>
+                            ${ce(name)}
+                        </p>
+                    `
+                    : ""
+            }
 
             ${
                 phone
@@ -813,20 +1018,37 @@ function getClaimImageUrl(imagePath) {
         return imagePath;
     }
 
-    return `${API_BASE_URL}${imagePath}`;
+    const backendBaseUrl =
+        API_BASE_URL.replace(
+            /\/api\/?$/,
+            ""
+        );
+
+    const normalizedPath =
+        imagePath.startsWith("/")
+            ? imagePath
+            : `/${imagePath}`;
+
+    return (
+        backendBaseUrl +
+        normalizedPath
+    );
 }
 
 function highlightSelectedClaim() {
     const selectedClaimId =
-        localStorage.getItem("selectedClaimId");
+        localStorage.getItem(
+            "selectedClaimId"
+        );
 
     if (!selectedClaimId) {
         return;
     }
 
-    const card = document.getElementById(
-        `claim-${selectedClaimId}`
-    );
+    const card =
+        document.getElementById(
+            `claim-${selectedClaimId}`
+        );
 
     if (card) {
         card.scrollIntoView({
@@ -849,3 +1071,10 @@ function highlightSelectedClaim() {
         "selectedClaimId"
     );
 }
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        loadClaims();
+    }
+);

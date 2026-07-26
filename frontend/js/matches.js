@@ -2,8 +2,15 @@ let selectedMatch = null;
 
 function getLoggedInUser() {
     try {
-        return JSON.parse(localStorage.getItem("user"));
+        const storedUser = localStorage.getItem("user");
+
+        if (!storedUser) {
+            return null;
+        }
+
+        return JSON.parse(storedUser);
     } catch (error) {
+        localStorage.removeItem("user");
         return null;
     }
 }
@@ -41,13 +48,23 @@ function getImageUrl(imagePath) {
         return imagePath;
     }
 
-    return `${API_BASE_URL}${imagePath}`;
+    const backendBaseUrl =
+        API_BASE_URL.replace(/\/api\/?$/, "");
+
+    const normalizedPath =
+        imagePath.startsWith("/")
+            ? imagePath
+            : `/${imagePath}`;
+
+    return `${backendBaseUrl}${normalizedPath}`;
 }
 
 function showMatchMessage(text, type = "success") {
-    const messageContainer = document.getElementById("message");
+    const messageContainer =
+        document.getElementById("message");
 
     if (!messageContainer) {
+        alert(text);
         return;
     }
 
@@ -63,7 +80,13 @@ function showMatchMessage(text, type = "success") {
 }
 
 async function loadMatches() {
-    const matchesContainer = document.getElementById("matches");
+    const matchesContainer =
+        document.getElementById("matches");
+
+    if (!matchesContainer) {
+        return;
+    }
+
     const user = getLoggedInUser();
 
     if (!user) {
@@ -71,7 +94,16 @@ async function loadMatches() {
         return;
     }
 
-    const userId = user.id || user._id;
+    const userId =
+        user.userId ||
+        user.id ||
+        user._id;
+
+    if (!userId) {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+        return;
+    }
 
     matchesContainer.innerHTML = `
         <div class="empty-state">
@@ -81,13 +113,26 @@ async function loadMatches() {
 
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/matches?userId=${encodeURIComponent(userId)}`
+            `${API_BASE_URL}/matches?userId=${encodeURIComponent(userId)}`
         );
 
-        const result = await response.json();
+        const text = await response.text();
+
+        let result = {};
+
+        try {
+            result = text ? JSON.parse(text) : {};
+        } catch {
+            throw new Error(
+                `Invalid backend response: ${text}`
+            );
+        }
 
         if (!response.ok) {
-            throw new Error(result.message || "Unable to load matches");
+            throw new Error(
+                result.message ||
+                "Unable to load matches"
+            );
         }
 
         const matches = Array.isArray(result)
@@ -97,7 +142,7 @@ async function loadMatches() {
         renderMatches(matches, userId);
 
     } catch (error) {
-        console.error(error);
+        console.error("Load matches error:", error);
 
         matchesContainer.innerHTML = `
             <div class="empty-state">
@@ -109,15 +154,21 @@ async function loadMatches() {
 }
 
 function renderMatches(matches, currentUserId) {
-    const matchesContainer = document.getElementById("matches");
+    const matchesContainer =
+        document.getElementById("matches");
+
+    if (!matchesContainer) {
+        return;
+    }
 
     if (!matches || matches.length === 0) {
         matchesContainer.innerHTML = `
             <div class="empty-state">
                 <h2>No possible matches found</h2>
+
                 <p class="muted">
-                    New matches will appear when similar lost and found
-                    reports are submitted.
+                    New matches will appear when similar lost
+                    and found reports are submitted.
                 </p>
             </div>
         `;
@@ -126,17 +177,26 @@ function renderMatches(matches, currentUserId) {
     }
 
     matchesContainer.innerHTML = matches
-        .map(match => createMatchCard(match, currentUserId))
+        .map(match =>
+            createMatchCard(
+                match,
+                currentUserId
+            )
+        )
         .join("");
 }
 
 function createMatchCard(match, currentUserId) {
-    /*
-     * Adjust these two lines only when your backend uses different field
-     * names.
-     */
-    const lostItem = match.lostItem || match.lost || {};
-    const foundItem = match.foundItem || match.found || match.item || {};
+    const lostItem =
+        match.lostItem ||
+        match.lost ||
+        {};
+
+    const foundItem =
+        match.foundItem ||
+        match.found ||
+        match.item ||
+        {};
 
     const lostItemId =
         match.lostItemId ||
@@ -146,16 +206,27 @@ function createMatchCard(match, currentUserId) {
         match.foundItemId ||
         getDocumentId(foundItem);
 
-    const score = Number(
+    const rawScore =
         match.score ??
         match.matchScore ??
         match.percentage ??
-        0
-    );
+        0;
 
-    const item = foundItem.itemName
-        ? foundItem
-        : lostItem;
+    let score = Number(rawScore);
+
+    if (Number.isNaN(score)) {
+        score = 0;
+    }
+
+    if (score >= 0 && score <= 1) {
+        score = score * 100;
+    }
+
+    const item =
+        foundItem.itemName ||
+        foundItem.name
+            ? foundItem
+            : lostItem;
 
     const itemName =
         item.itemName ||
@@ -176,11 +247,15 @@ function createMatchCard(match, currentUserId) {
 
     const location =
         item.location ||
+        item.foundLocation ||
+        item.lostLocation ||
         "Not specified";
 
     const eventDate =
         item.eventDate ||
         item.date ||
+        item.foundDate ||
+        item.lostDate ||
         "Not specified";
 
     const description =
@@ -189,20 +264,25 @@ function createMatchCard(match, currentUserId) {
 
     const imagePath =
         foundItem.imagePath ||
+        foundItem.imageUrl ||
         item.imagePath ||
+        item.imageUrl ||
         "";
 
-    const imageUrl = getImageUrl(imagePath);
+    const imageUrl =
+        getImageUrl(imagePath);
 
     const finderName =
         match.finderName ||
         foundItem.userName ||
         foundItem.ownerName ||
+        foundItem.postedByName ||
         "Finder";
 
     const finderUserId =
         match.finderId ||
         foundItem.userId ||
+        foundItem.ownerId ||
         "";
 
     const claimStatus =
@@ -214,7 +294,8 @@ function createMatchCard(match, currentUserId) {
 
     const isOwnFoundItem =
         finderUserId &&
-        String(finderUserId) === String(currentUserId);
+        String(finderUserId) ===
+        String(currentUserId);
 
     const matchLevel =
         score >= 70
@@ -228,7 +309,13 @@ function createMatchCard(match, currentUserId) {
 
     let actionHtml = "";
 
-    if (isOwnFoundItem) {
+    if (!lostItemId || !foundItemId) {
+        actionHtml = `
+            <span class="claim-status claim-status-rejected">
+                Match item information is incomplete
+            </span>
+        `;
+    } else if (isOwnFoundItem) {
         actionHtml = `
             <span class="claim-status">
                 You posted this found item
@@ -243,13 +330,14 @@ function createMatchCard(match, currentUserId) {
     } else if (claimStatus === "APPROVED") {
         actionHtml = `
             <span class="claim-status claim-status-approved">
-                Claim approved — open the Claims page to view contact details
+                Claim approved — open the Claims page
+                to view contact details
             </span>
 
             <a
                 class="claim-button"
                 href="claims.html"
-                style="text-decoration:none"
+                style="text-decoration: none;"
             >
                 Open Claim
             </a>
@@ -265,11 +353,10 @@ function createMatchCard(match, currentUserId) {
             <button
                 type="button"
                 class="claim-button"
-                onclick="openClaimModal(
-                    '${escapeHtml(lostItemId)}',
-                    '${escapeHtml(foundItemId)}',
-                    '${escapeHtml(itemName)}'
-                )"
+                data-lost-item-id="${escapeHtml(lostItemId)}"
+                data-found-item-id="${escapeHtml(foundItemId)}"
+                data-item-name="${escapeHtml(itemName)}"
+                onclick="openClaimModalFromButton(this)"
             >
                 Claim This Item
             </button>
@@ -282,7 +369,10 @@ function createMatchCard(match, currentUserId) {
                 class="match-image"
                 src="${escapeHtml(imageUrl)}"
                 alt="${escapeHtml(itemName)}"
-                onerror="this.parentElement.innerHTML='<div class=&quot;no-image&quot;>Image unavailable</div>'"
+                onerror="
+                    this.parentElement.innerHTML =
+                    '<div class=&quot;no-image&quot;>Image unavailable</div>'
+                "
             >
         `
         : `
@@ -296,7 +386,6 @@ function createMatchCard(match, currentUserId) {
             class="match-card"
             id="match-${escapeHtml(foundItemId)}"
         >
-
             <div class="match-card-header">
 
                 <div class="match-title-area">
@@ -309,13 +398,20 @@ function createMatchCard(match, currentUserId) {
                         ${matchLevel}
                     </span>
 
-                    <h2>${escapeHtml(itemName)}</h2>
+                    <h2>
+                        ${escapeHtml(itemName)}
+                    </h2>
 
                 </div>
 
                 <div class="score-circle">
-                    <strong>${score.toFixed(0)}%</strong>
-                    <span>Match score</span>
+                    <strong>
+                        ${score.toFixed(0)}%
+                    </strong>
+
+                    <span>
+                        Match score
+                    </span>
                 </div>
 
             </div>
@@ -331,42 +427,60 @@ function createMatchCard(match, currentUserId) {
                     <div class="match-details">
 
                         <div class="detail-box">
-                            <span class="detail-label">Category</span>
+                            <span class="detail-label">
+                                Category
+                            </span>
+
                             <span class="detail-value">
                                 ${escapeHtml(category)}
                             </span>
                         </div>
 
                         <div class="detail-box">
-                            <span class="detail-label">Color</span>
+                            <span class="detail-label">
+                                Color
+                            </span>
+
                             <span class="detail-value">
                                 ${escapeHtml(color)}
                             </span>
                         </div>
 
                         <div class="detail-box">
-                            <span class="detail-label">Brand</span>
+                            <span class="detail-label">
+                                Brand
+                            </span>
+
                             <span class="detail-value">
                                 ${escapeHtml(brand)}
                             </span>
                         </div>
 
                         <div class="detail-box">
-                            <span class="detail-label">Location</span>
+                            <span class="detail-label">
+                                Location
+                            </span>
+
                             <span class="detail-value">
                                 ${escapeHtml(location)}
                             </span>
                         </div>
 
                         <div class="detail-box">
-                            <span class="detail-label">Found date</span>
+                            <span class="detail-label">
+                                Found date
+                            </span>
+
                             <span class="detail-value">
                                 ${escapeHtml(eventDate)}
                             </span>
                         </div>
 
                         <div class="detail-box full-width">
-                            <span class="detail-label">Description</span>
+                            <span class="detail-label">
+                                Description
+                            </span>
+
                             <span class="detail-value">
                                 ${escapeHtml(description)}
                             </span>
@@ -378,27 +492,35 @@ function createMatchCard(match, currentUserId) {
                         score >= 70
                             ? `
                                 <div class="match-recommendation">
-                                    This item has a strong similarity score.
-                                    Verify the details carefully before claiming.
+                                    This item has a strong similarity
+                                    score. Verify the details carefully
+                                    before claiming.
                                 </div>
                             `
                             : `
                                 <div class="security-box">
-                                    <strong>Possible match</strong>
-                                    Some details are similar, but you should
-                                    verify them before submitting a claim.
+                                    <strong>
+                                        Possible match
+                                    </strong>
+
+                                    Some details are similar, but you
+                                    should verify them before submitting
+                                    a claim.
                                 </div>
                             `
                     }
 
                     <div class="posted-by-box">
 
-                        <strong>Posted by:</strong>
+                        <strong>
+                            Posted by:
+                        </strong>
+
                         ${escapeHtml(finderName)}
 
                         <div class="hidden-contact">
-                            Phone number and email are hidden until the finder
-                            approves your claim.
+                            Phone number and email are hidden until
+                            the finder approves your claim.
                         </div>
 
                     </div>
@@ -410,53 +532,128 @@ function createMatchCard(match, currentUserId) {
                 </div>
 
             </div>
-
         </article>
     `;
 }
 
-function openClaimModal(lostItemId, foundItemId, itemName) {
+function openClaimModalFromButton(button) {
+    const lostItemId =
+        button.dataset.lostItemId || "";
+
+    const foundItemId =
+        button.dataset.foundItemId || "";
+
+    const itemName =
+        button.dataset.itemName || "";
+
+    openClaimModal(
+        lostItemId,
+        foundItemId,
+        itemName
+    );
+}
+
+function openClaimModal(
+    lostItemId,
+    foundItemId,
+    itemName
+) {
+    if (!lostItemId || !foundItemId) {
+        showMatchMessage(
+            "Unable to open claim form because item IDs are missing.",
+            "danger"
+        );
+        return;
+    }
+
     selectedMatch = {
         lostItemId,
         foundItemId,
         itemName
     };
 
-    document.getElementById("claimLostItemId").value =
+    const claimModal =
+        document.getElementById("claimModal");
+
+    const claimForm =
+        document.getElementById("claimForm");
+
+    const lostItemInput =
+        document.getElementById("claimLostItemId");
+
+    const foundItemInput =
+        document.getElementById("claimFoundItemId");
+
+    const claimItemName =
+        document.getElementById("claimItemName");
+
+    if (
+        !claimModal ||
+        !claimForm ||
+        !lostItemInput ||
+        !foundItemInput
+    ) {
+        showMatchMessage(
+            "Claim form elements are missing from the page.",
+            "danger"
+        );
+        return;
+    }
+
+    claimForm.reset();
+
+    lostItemInput.value =
         lostItemId;
 
-    document.getElementById("claimFoundItemId").value =
+    foundItemInput.value =
         foundItemId;
 
-    document.getElementById("claimForm").reset();
+    if (claimItemName) {
+        claimItemName.textContent =
+            itemName || "Selected item";
+    }
 
-    document.getElementById("claimLostItemId").value =
-        lostItemId;
+    claimModal.classList.add("show");
 
-    document.getElementById("claimFoundItemId").value =
-        foundItemId;
+    document.body.style.overflow =
+        "hidden";
 
-    document.getElementById("claimModal").classList.add("show");
+    const ownershipProof =
+        document.getElementById("ownershipProof");
 
-    document.body.style.overflow = "hidden";
-
-    setTimeout(() => {
-        document.getElementById("ownershipProof").focus();
-    }, 100);
+    if (ownershipProof) {
+        setTimeout(() => {
+            ownershipProof.focus();
+        }, 100);
+    }
 }
 
 function closeClaimModal() {
-    document.getElementById("claimModal").classList.remove("show");
+    const claimModal =
+        document.getElementById("claimModal");
 
-    document.body.style.overflow = "";
+    const claimForm =
+        document.getElementById("claimForm");
+
+    if (claimModal) {
+        claimModal.classList.remove("show");
+    }
+
+    document.body.style.overflow =
+        "";
 
     selectedMatch = null;
 
-    document.getElementById("claimForm").reset();
+    if (claimForm) {
+        claimForm.reset();
+    }
 }
 
 function closeClaimModalFromOverlay(event) {
-    if (event.target.id === "claimModal") {
+    if (
+        event.target &&
+        event.target.id === "claimModal"
+    ) {
         closeClaimModal();
     }
 }
@@ -472,23 +669,68 @@ async function submitClaim(event) {
     }
 
     const claimantId =
+        user.userId ||
         user.id ||
         user._id;
 
+    if (!claimantId) {
+        showMatchMessage(
+            "User ID is missing. Please log in again.",
+            "danger"
+        );
+
+        localStorage.removeItem("user");
+
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 1000);
+
+        return;
+    }
+
+    const lostItemInput =
+        document.getElementById("claimLostItemId");
+
+    const foundItemInput =
+        document.getElementById("claimFoundItemId");
+
+    const ownershipProofInput =
+        document.getElementById("ownershipProof");
+
+    const additionalDetailsInput =
+        document.getElementById("additionalDetails");
+
+    const collectionMessageInput =
+        document.getElementById("collectionMessage");
+
+    if (
+        !lostItemInput ||
+        !foundItemInput ||
+        !ownershipProofInput ||
+        !additionalDetailsInput ||
+        !collectionMessageInput
+    ) {
+        showMatchMessage(
+            "Claim form is incomplete.",
+            "danger"
+        );
+        return;
+    }
+
     const lostItemId =
-        document.getElementById("claimLostItemId").value.trim();
+        lostItemInput.value.trim();
 
     const foundItemId =
-        document.getElementById("claimFoundItemId").value.trim();
+        foundItemInput.value.trim();
 
     const ownershipProof =
-        document.getElementById("ownershipProof").value.trim();
+        ownershipProofInput.value.trim();
 
     const additionalDetails =
-        document.getElementById("additionalDetails").value.trim();
+        additionalDetailsInput.value.trim();
 
     const collectionMessage =
-        document.getElementById("collectionMessage").value.trim();
+        collectionMessageInput.value.trim();
 
     if (
         !lostItemId ||
@@ -515,19 +757,25 @@ async function submitClaim(event) {
     }
 
     const submitButton =
-        document.getElementById("submitClaimButton");
+        document.getElementById(
+            "submitClaimButton"
+        );
 
-    submitButton.disabled = true;
-    submitButton.textContent = "Submitting...";
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent =
+            "Submitting...";
+    }
 
     try {
         const response = await fetch(
-            `${"https://college-lost-and-found-2erx.onrender.com"}/api/claims`,
+            `${API_BASE_URL}/claims`,
             {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type":
+                        "application/json"
                 },
 
                 body: JSON.stringify({
@@ -541,7 +789,21 @@ async function submitClaim(event) {
             }
         );
 
-        const result = await response.json();
+        const text =
+            await response.text();
+
+        let result = {};
+
+        try {
+            result =
+                text
+                    ? JSON.parse(text)
+                    : {};
+        } catch {
+            throw new Error(
+                `Invalid backend response: ${text}`
+            );
+        }
 
         if (!response.ok) {
             throw new Error(
@@ -553,27 +815,57 @@ async function submitClaim(event) {
         closeClaimModal();
 
         showMatchMessage(
+            result.message ||
             "Claim submitted successfully. The finder will review your ownership details."
         );
 
         await loadMatches();
 
     } catch (error) {
-        console.error(error);
+        console.error(
+            "Submit claim error:",
+            error
+        );
 
         showMatchMessage(
-            error.message,
+            error.message ||
+            "Unable to submit claim",
             "danger"
         );
 
     } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = "Submit Claim";
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent =
+                "Submit Claim";
+        }
     }
 }
 
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape") {
-        closeClaimModal();
+document.addEventListener(
+    "keydown",
+    event => {
+        if (event.key === "Escape") {
+            closeClaimModal();
+        }
     }
-});
+);
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        const claimForm =
+            document.getElementById(
+                "claimForm"
+            );
+
+        if (claimForm) {
+            claimForm.addEventListener(
+                "submit",
+                submitClaim
+            );
+        }
+
+        loadMatches();
+    }
+);

@@ -1,1 +1,168 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard</title><link rel="stylesheet" href="css/style.css"></head><body onload="requireLogin();loadNotificationCount()"><header></header><main class="container"><div class="page-heading"><div><div class="eyebrow">Student portal</div><h1 class="page-title">Welcome back</h1><p class="muted">Choose what you want to do today.</p></div></div><div class="grid"><div class="card feature-card"><div class="feature-icon">🔍</div><h2>Lost an item?</h2><p class="muted">Create a detailed lost-item report.</p><a class="btn" href="report-lost.html">Report Lost</a></div><div class="card feature-card"><div class="feature-icon">📦</div><h2>Found an item?</h2><p class="muted">Help return it to the right student.</p><a class="btn" href="report-found.html">Report Found</a></div><div class="card feature-card"><div class="feature-icon">🗂️</div><h2>Browse listings</h2><p class="muted">Explore currently active reports.</p><a class="btn secondary" href="browse-items.html">Browse Items</a></div><div class="card feature-card"><div class="feature-icon">✨</div><h2>Possible matches</h2><p class="muted">Open one of your posts and compare matches.</p><a class="btn secondary" href="my-posts.html">Check My Posts</a></div></div></main><script src="js/config.js"></script><script src="js/auth.js"></script><script src="js/notifications.js"></script><script src="js/ui.js"></script><script>mountNav('dashboard')</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+<body onload="requireLogin()">
+
+<header id="navbar"></header>
+
+<main class="container">
+
+    <div class="page-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                Student Portal
+            </div>
+
+            <h1 class="page-title">
+                Welcome Back
+            </h1>
+
+            <p class="muted">
+                Choose what you want to do today.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="grid">
+
+        <div class="card feature-card">
+
+            <div class="feature-icon">
+                🔍
+            </div>
+
+            <h2>
+                Lost an item?
+            </h2>
+
+            <p class="muted">
+                Create a detailed lost-item report
+                to improve the chances of finding it.
+            </p>
+
+            <a
+                class="btn"
+                href="report-lost.html"
+            >
+                Report Lost
+            </a>
+
+        </div>
+
+        <div class="card feature-card">
+
+            <div class="feature-icon">
+                📦
+            </div>
+
+            <h2>
+                Found an item?
+            </h2>
+
+            <p class="muted">
+                Add a found-item report and help
+                return it to the correct student.
+            </p>
+
+            <a
+                class="btn"
+                href="report-found.html"
+            >
+                Report Found
+            </a>
+
+        </div>
+
+        <div class="card feature-card">
+
+            <div class="feature-icon">
+                🗂️
+            </div>
+
+            <h2>
+                Browse Listings
+            </h2>
+
+            <p class="muted">
+                Explore currently active lost and
+                found reports across the campus.
+            </p>
+
+            <a
+                class="btn secondary"
+                href="browse-items.html"
+            >
+                Browse Items
+            </a>
+
+        </div>
+
+        <div class="card feature-card">
+
+            <div class="feature-icon">
+                ✨
+            </div>
+
+            <h2>
+                Possible Matches
+            </h2>
+
+            <p class="muted">
+                Review your reports and check whether
+                similar lost or found items were posted.
+            </p>
+
+            <a
+                class="btn secondary"
+                href="my-posts.html"
+            >
+                Check My Posts
+            </a>
+
+        </div>
+
+    </div>
+
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/ui.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    if (typeof mountNav === "function") {
+        mountNav("dashboard");
+    }
+
+    if (typeof loadNotificationCount === "function") {
+        loadNotificationCount();
+    }
+
+});
+</script>
+
+</body>
+</html>
