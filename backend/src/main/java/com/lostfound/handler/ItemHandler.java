@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Sorts.descending;
 
@@ -79,25 +80,81 @@ public class ItemHandler implements HttpHandler {
         ResponseUtil.json(exchange, 201, ResponseUtil.message(type + " item reported successfully"));
     }
 
-    private String saveImage(HttpExchange exchange, MultipartUtil.FilePart image) throws IOException {
+    private String saveImage(
+            HttpExchange exchange,
+            MultipartUtil.FilePart image
+    ) throws IOException {
+
         if (image.data().length > MAX_IMAGE_SIZE) {
-            throw new IllegalArgumentException("Image must be 10 MB or smaller");
-        }
-        if (image.contentType() == null || !image.contentType().toLowerCase().startsWith("image/")) {
-            throw new IllegalArgumentException("Please select a valid image file");
+            throw new IllegalArgumentException(
+                    "Image must be 10 MB or smaller"
+            );
         }
 
-        String extension = safeExtension(image.filename());
-        String storedName = UUID.randomUUID() + extension;
-        Path uploadRoot = Path.of(System.getenv().getOrDefault("UPLOAD_DIR", "uploads/item-images"));
+        if (
+                image.contentType() == null ||
+                !image.contentType()
+                        .toLowerCase()
+                        .startsWith("image/")
+        ) {
+            throw new IllegalArgumentException(
+                    "Please select a valid image file"
+            );
+        }
+
+        String extension =
+                safeExtension(image.filename());
+
+        String storedName =
+                UUID.randomUUID() + extension;
+
+        Path uploadRoot = Path.of(
+                System.getenv().getOrDefault(
+                        "UPLOAD_DIR",
+                        "uploads/item-images"
+                )
+        ).toAbsolutePath().normalize();
+
         Files.createDirectories(uploadRoot);
-        Files.write(uploadRoot.resolve(storedName), image.data());
 
-        String host = exchange.getRequestHeaders().getFirst("Host");
-        if (host == null || host.isBlank()) host = "localhost:8080";
-        String forwardedProto = exchange.getRequestHeaders().getFirst("X-Forwarded-Proto");
-        String scheme = forwardedProto == null || forwardedProto.isBlank() ? "http" : forwardedProto;
-        return scheme + "://" + host + "/uploads/" + storedName;
+        Path savedFile =
+                uploadRoot.resolve(storedName)
+                        .normalize();
+
+        if (!savedFile.startsWith(uploadRoot)) {
+            throw new IOException(
+                    "Invalid image storage path"
+            );
+        }
+
+        Files.write(
+                savedFile,
+                image.data()
+        );
+
+        String host =
+                exchange.getRequestHeaders()
+                        .getFirst("Host");
+
+        if (host == null || host.isBlank()) {
+            host = "localhost:8080";
+        }
+
+        String forwardedProto =
+                exchange.getRequestHeaders()
+                        .getFirst("X-Forwarded-Proto");
+
+        String scheme =
+                forwardedProto == null ||
+                forwardedProto.isBlank()
+                        ? "http"
+                        : forwardedProto;
+
+        return scheme +
+                "://" +
+                host +
+                "/uploads/" +
+                storedName;
     }
 
     private String safeExtension(String filename) {

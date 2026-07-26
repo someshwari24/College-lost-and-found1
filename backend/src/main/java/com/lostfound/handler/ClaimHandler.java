@@ -92,6 +92,70 @@ public class ClaimHandler implements HttpHandler {
      *   "message": "..."
      * }
      */
+
+
+    private void addItemImages(
+        Map<String, Object> map,
+        Document lostItem,
+        Document foundItem
+) {
+
+    if (lostItem != null) {
+
+        System.out.println(
+                "Lost Item: " + lostItem.toJson()
+        );
+
+        String lostImage =
+                safeString(
+                        lostItem.get("imageUrl")
+                );
+
+        System.out.println(
+                "Lost Image URL: " + lostImage
+        );
+
+        map.put(
+                "lostItemImage",
+                lostImage
+        );
+
+    } else {
+
+        map.put(
+                "lostItemImage",
+                ""
+        );
+    }
+
+    if (foundItem != null) {
+
+        System.out.println(
+                "Found Item: " + foundItem.toJson()
+        );
+
+        String foundImage =
+                safeString(
+                        foundItem.get("imageUrl")
+                );
+
+        System.out.println(
+                "Found Image URL: " + foundImage
+        );
+
+        map.put(
+                "foundItemImage",
+                foundImage
+        );
+
+    } else {
+
+        map.put(
+                "foundItemImage",
+                ""
+        );
+    }
+}
     private void createClaim(HttpExchange exchange) throws IOException {
 
         Map<String, Object> body = RequestUtil.readJson(exchange);
@@ -454,21 +518,11 @@ public class ClaimHandler implements HttpHandler {
                             : safeItemName(foundItem)
             );
 
-            if (lostItem != null) {
-
-                map.put(
-                        "lostItemImage",
-                        safeString(lostItem.get("imagePath"))
-                );
-            }
-
-            if (foundItem != null) {
-
-                map.put(
-                        "foundItemImage",
-                        safeString(foundItem.get("imagePath"))
-                );
-            }
+            addItemImages(
+                    map,
+                    lostItem,
+                    foundItem
+            );
 
             boolean isFinder =
                     userId.equals(
@@ -1121,6 +1175,7 @@ public class ClaimHandler implements HttpHandler {
         }
     }
 
+   
     private ObjectId parseObjectId(
             String value,
             String errorMessage
@@ -1223,3 +1278,4 @@ public class ClaimHandler implements HttpHandler {
         return "";
     }
 }
+
