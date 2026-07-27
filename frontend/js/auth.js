@@ -11,18 +11,62 @@ function showMessage(text, ok = true) {
 }
 
 async function registerUser(event) {
+
     event.preventDefault();
 
     const form = event.target;
-    const button = form.querySelector('button[type="submit"]');
-    const data = Object.fromEntries(new FormData(form));
+    const button = form.querySelector("button[type='submit']");
 
-    if (
-        typeof API_BASE_URL === "undefined" ||
-        !API_BASE_URL
-    ) {
+    const formData = new FormData(form);
+
+    const data = {
+        name: String(formData.get("name") || "").trim(),
+        email: String(formData.get("email") || "").trim(),
+        password: String(formData.get("password") || ""),
+        department: String(formData.get("department") || "").trim(),
+        phone: String(formData.get("phone") || "").trim()
+    };
+
+    console.log("Registration Data:", {
+        ...data,
+        password: "[hidden]",
+        passwordLength: data.password.length
+    });
+
+    if (!data.name) {
+        showMessage("Full name is required.", false);
+        return;
+    }
+
+    if (!data.email) {
+        showMessage("Email is required.", false);
+        return;
+    }
+
+    if (data.password.length < 6) {
         showMessage(
-            "API_BASE_URL is not configured in config.js",
+            "Password must have at least 6 characters.",
+            false
+        );
+        return;
+    }
+
+    if (!data.department) {
+        showMessage("Department is required.", false);
+        return;
+    }
+
+    if (!/^\d{10}$/.test(data.phone)) {
+        showMessage(
+            "Phone number must contain exactly 10 digits.",
+            false
+        );
+        return;
+    }
+
+    if (typeof API_BASE_URL === "undefined" || !API_BASE_URL) {
+        showMessage(
+            "API_BASE_URL is not configured.",
             false
         );
         return;
@@ -36,6 +80,12 @@ async function registerUser(event) {
     showMessage("Connecting to server...", true);
 
     try {
+
+        console.log(
+            "Register URL:",
+            `${API_BASE_URL}/register`
+        );
+
         const response = await fetch(
             `${API_BASE_URL}/register`,
             {
@@ -47,66 +97,59 @@ async function registerUser(event) {
             }
         );
 
-        const text = await response.text();
+        const output = await response.json();
 
-        let output = {};
-
-        try {
-            output = text ? JSON.parse(text) : {};
-        } catch {
-            throw new Error(
-                `Invalid response from backend: ${text}`
-            );
-        }
-
-        if (!response.ok) {
-            throw new Error(
-                output.message ||
-                `Registration failed with status ${response.status}`
-            );
-        }
+        console.log("Registration Response:", output);
 
         showMessage(
-            output.message || "Registration successful",
-            true
+            output.message || "Registration successful.",
+            response.ok
         );
 
-        form.reset();
+        if (response.ok) {
 
-        setTimeout(() => {
-            window.location.href = "login.html";
-        }, 1000);
+            form.reset();
+
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1000);
+
+        }
 
     } catch (error) {
-        console.error("Registration error:", error);
+
+        console.error(error);
 
         showMessage(
-            error.message ||
-            "Unable to connect to the backend",
+            "Unable to connect to the backend.",
             false
         );
 
     } finally {
+
         if (button) {
             button.disabled = false;
             button.textContent = "Register";
         }
+
     }
 }
 
 async function loginUser(event) {
+
     event.preventDefault();
 
     const form = event.target;
-    const button = form.querySelector('button[type="submit"]');
-    const data = Object.fromEntries(new FormData(form));
+    const button = form.querySelector("button[type='submit']");
 
-    if (
-        typeof API_BASE_URL === "undefined" ||
-        !API_BASE_URL
-    ) {
+    const data = {
+        email: form.email.value.trim(),
+        password: form.password.value
+    };
+
+    if (typeof API_BASE_URL === "undefined" || !API_BASE_URL) {
         showMessage(
-            "API_BASE_URL is not configured in config.js",
+            "API_BASE_URL is not configured.",
             false
         );
         return;
@@ -120,6 +163,7 @@ async function loginUser(event) {
     showMessage("Connecting to server...", true);
 
     try {
+
         const response = await fetch(
             `${API_BASE_URL}/login`,
             {
@@ -131,103 +175,72 @@ async function loginUser(event) {
             }
         );
 
-        const text = await response.text();
+        const output = await response.json();
 
-        let output = {};
-
-        try {
-            output = text ? JSON.parse(text) : {};
-        } catch {
-            throw new Error(
-                `Invalid response from backend: ${text}`
-            );
-        }
+        console.log("Login Response:", output);
 
         if (!response.ok) {
             throw new Error(
-                output.message ||
-                `Login failed with status ${response.status}`
+                output.message || "Login failed."
             );
         }
-
-        const userId =
-            output.userId ||
-            output.id ||
-            output._id ||
-            output.user?.userId ||
-            output.user?.id ||
-            output.user?._id;
-
-        if (!userId) {
-            console.log("Login response:", output);
-
-            throw new Error(
-                "Backend response does not contain userId"
-            );
-        }
-
-        const userData = output.user
-            ? {
-                ...output.user,
-                userId
-            }
-            : {
-                ...output,
-                userId
-            };
 
         localStorage.setItem(
             "user",
-            JSON.stringify(userData)
+            JSON.stringify(output)
         );
 
         showMessage(
-            output.message || "Login successful",
+            output.message || "Login successful.",
             true
         );
 
         setTimeout(() => {
+
             window.location.href =
                 "student-dashboard.html";
+
         }, 500);
 
     } catch (error) {
-        console.error("Login error:", error);
+
+        console.error(error);
 
         showMessage(
-            error.message ||
-            "Unable to connect to the backend",
+            error.message,
             false
         );
 
     } finally {
+
         if (button) {
             button.disabled = false;
             button.textContent = "Login";
         }
+
     }
 }
 
 function getLoggedInUser() {
-    const storedUser = localStorage.getItem("user");
 
-    if (!storedUser) {
-        return null;
-    }
+    const user =
+        localStorage.getItem("user");
 
-    try {
-        return JSON.parse(storedUser);
-    } catch {
-        localStorage.removeItem("user");
-        return null;
-    }
+    return user
+        ? JSON.parse(user)
+        : null;
 }
 
 function requireLogin() {
-    const user = getLoggedInUser();
+
+    const user =
+        getLoggedInUser();
 
     if (!user) {
-        window.location.href = "login.html";
+
+        window.location.href =
+            "login.html";
+
         return null;
     }
 
@@ -235,6 +248,9 @@ function requireLogin() {
 }
 
 function logout() {
+
     localStorage.removeItem("user");
-    window.location.href = "login.html";
+
+    window.location.href =
+        "login.html";
 }
